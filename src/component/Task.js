@@ -1,50 +1,46 @@
-import React, { useState } from "react";
-import "../App.css";
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Button from "react-bootstrap/Button";
+import * as actions from "./actions";
+import "../App.css";
 
 const Task = () => {
-  const [taskInput, setTaskInput] = useState("");
-  const [tasks, setTasks] = useState([]);
-  const [editingTaskIndex, setEditingTaskIndex] = useState(null);
-  const [editTaskInput, setEditTaskInput] = useState("");
-  const [filterDone, setFilterDone] = useState(false);
+  const dispatch = useDispatch();
+  const tasks = useSelector((state) => state.tasks);
+  const editingTaskIndex = useSelector((state) => state.editingTaskIndex);
+  const editTaskInput = useSelector((state) => state.editTaskInput);
+  const filterDone = useSelector((state) => state.filterDone);
 
   const handleInputChange = (e) => {
-    setTaskInput(e.target.value);
+    dispatch(actions.setEditTaskInput(e.target.value));
   };
 
   const handleAddTask = () => {
-    setTasks([...tasks, { text: taskInput, done: false }]);
-    setTaskInput("");
+    dispatch(actions.addTask(editTaskInput));
   };
 
   const handleModifyTask = (index) => {
-    setEditingTaskIndex(index);
-    setEditTaskInput(tasks[index].text);
+    dispatch(actions.updateTask(index, editTaskInput));
   };
 
   const handleUpdateTask = () => {
-    const updatedTasks = [...tasks];
-    updatedTasks[editingTaskIndex] = { ...updatedTasks[editingTaskIndex], text: editTaskInput };
-    setTasks(updatedTasks);
-    setEditingTaskIndex(null);
-    setEditTaskInput("");
+    dispatch(actions.updateTask(editingTaskIndex, editTaskInput));
   };
 
   const handleDeleteTask = (index) => {
-    const updatedTasks = [...tasks];
-    updatedTasks.splice(index, 1);
-    setTasks(updatedTasks);
+    dispatch(actions.deleteTask(index));
   };
 
   const handleToggleDone = (index) => {
-    const updatedTasks = [...tasks];
-    updatedTasks[index] = { ...updatedTasks[index], done: !updatedTasks[index].done };
-    setTasks(updatedTasks);
+    dispatch(actions.toggleDone(index));
   };
 
-  const filteredTasks = filterDone ? tasks.filter(task => task.done) : tasks;
+  const handleFilterDone = () => {
+    dispatch(actions.setFilterDone(!filterDone));
+  };
+
+  const filteredTasks = filterDone ? tasks.filter((task) => task.done) : tasks;
 
   return (
     <>
@@ -56,13 +52,13 @@ const Task = () => {
         <div>
           <input
             placeholder="Ajouter une tâche"
-            value={taskInput}
+            value={editTaskInput}
             onChange={handleInputChange}
             className="addtaskinput"
           />
           <Button variant="primary" onClick={handleAddTask}>
-            Add task
-          </Button>
+            add Task
+          </Button>{" "}
         </div>
       </div>
       <div>
@@ -70,9 +66,8 @@ const Task = () => {
           <h6>Filtrer les tâches par (fait/pas fait)</h6>
           <input
             type="checkbox"
-            // className="checkbox"
             checked={filterDone}
-            onChange={() => setFilterDone(!filterDone)}
+            onChange={handleFilterDone}
           />
         </div>
       </div>
@@ -80,43 +75,35 @@ const Task = () => {
         <div key={index} className="roro">
           <input
             type="checkbox"
-            className="checkbox"
             checked={task.done}
             onChange={() => handleToggleDone(index)}
           />
           {editingTaskIndex === index ? (
             <>
-              {/* Champ de saisie pour modifier la tâche */}
               <input
                 type="text"
                 value={editTaskInput}
-                onChange={(e) => setEditTaskInput(e.target.value)}
+                onChange={handleInputChange}
               />
-              <button
-                type="button"
-                className="btn btn-success"
-                onClick={handleUpdateTask}
-              >
-                Enregistrer
-              </button>
+              <Button variant="danger" onClick={handleUpdateTask}>
+                enregistrer
+              </Button>{" "}
             </>
           ) : (
             <>
-              <h3 style={{ textDecoration: task.done ? 'line-through' : 'none' }}>{task.text}</h3>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => handleModifyTask(index)}
+              <h3
+                style={{ textDecoration: task.done ? "line-through" : "none" }}
               >
+                {task.text}
+              </h3>
+              {/* Bouton pour modifier la tache */}
+              <Button variant="primary" onClick={() => handleModifyTask(index)}>
                 Modifier
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={() => handleDeleteTask(index)}
-              >
+              </Button>{" "}
+              {/* Bouton pour supprimer la tache */}
+              <Button variant="danger" onClick={() => handleDeleteTask(index)}>
                 Supprimer
-              </button>
+              </Button>{" "}
             </>
           )}
         </div>
